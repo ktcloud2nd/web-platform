@@ -5,9 +5,9 @@ import { fetchVehicleEmbeds } from '../../api/quicksight';
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 const operatorTabs = [
-  { label: '이상 탐지', path: '/operator/anomaly' },
-  { label: '차량', path: '/operator/vehicle' },
-  { label: '인프라 서비스', path: '/operator/infra-service' }
+  { label: 'Anomaly', path: '/operator/anomaly' },
+  { label: 'Vehicle', path: '/operator/vehicle' },
+  { label: 'Infra Service', path: '/operator/infra-service' }
 ];
 
 function OperatorVehiclePage() {
@@ -54,7 +54,7 @@ function OperatorVehiclePage() {
   return (
     <DashboardLayout
       role="OPERATOR"
-      title="차량 운영 대시보드"
+      title="Operator Vehicle Dashboard"
       description=""
       tabs={operatorTabs}
     >
@@ -72,7 +72,7 @@ function OperatorVehiclePage() {
             />
           ) : (
             <div className="iframe-slot-inner anomaly-full-placeholder">
-              <span>QuickSight 차량 대시보드</span>
+              <span>QuickSight operator vehicle dashboard</span>
               <code>embed URL pending</code>
             </div>
           )}
