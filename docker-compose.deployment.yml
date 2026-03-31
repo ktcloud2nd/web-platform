@@ -1,4 +1,9 @@
 services:
+  # TODO(RDS/Grafana): keep local-first testing as-is for now.
+  # Future production direction:
+  # - all backend services connect to one private RDS endpoint from the data layer
+  # - only operator-facing flow should eventually expose Grafana embedding
+  # - if Grafana is added, prefer attaching it behind ALB / separate service instead of mixing it into login/user flows
   login-backend:
     image: ${LOGIN_BACKEND_IMAGE:-your-registry/web-platform-login-backend:latest}
     container_name: web-platform-login-backend
@@ -8,6 +13,12 @@ services:
     environment:
       PORT: 4000
       APP_TARGET: login
+      # Uncomment when switching from DATABASE_URL to split RDS variables.
+      # DB_HOST: ${DB_HOST}
+      # DB_PORT: ${DB_PORT:-5432}
+      # DB_NAME: ${DB_NAME}
+      # DB_USER: ${DB_USER}
+      # DB_PASSWORD: ${DB_PASSWORD}
     healthcheck:
       test:
         [
@@ -30,6 +41,12 @@ services:
     environment:
       PORT: 4000
       APP_TARGET: user
+      # Uncomment when switching from DATABASE_URL to split RDS variables.
+      # DB_HOST: ${DB_HOST}
+      # DB_PORT: ${DB_PORT:-5432}
+      # DB_NAME: ${DB_NAME}
+      # DB_USER: ${DB_USER}
+      # DB_PASSWORD: ${DB_PASSWORD}
     healthcheck:
       test:
         [
@@ -52,6 +69,19 @@ services:
     environment:
       PORT: 4000
       APP_TARGET: operator
+      # Uncomment when switching from DATABASE_URL to split RDS variables.
+      # DB_HOST: ${DB_HOST}
+      # DB_PORT: ${DB_PORT:-5432}
+      # DB_NAME: ${DB_NAME}
+      # DB_USER: ${DB_USER}
+      # DB_PASSWORD: ${DB_PASSWORD}
+      # Grafana embed endpoint scaffold is implemented in backend/src/grafana.js.
+      # Enable the env keys below together with the commented route in backend/src/server.js.
+      # GRAFANA_ENABLED: ${GRAFANA_ENABLED:-false}
+      # GRAFANA_BASE_URL: ${GRAFANA_BASE_URL}
+      # GRAFANA_EMBED_URL: ${GRAFANA_EMBED_URL}
+      # GRAFANA_ALLOW_EMBED: ${GRAFANA_ALLOW_EMBED:-false}
+      # GRAFANA_PROVIDER: ${GRAFANA_PROVIDER:-self-hosted}
     healthcheck:
       test:
         [
@@ -112,3 +142,25 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  # Uncomment this service only when you want deployment-side self-hosted Grafana.
+  # Keep it disabled for local app testing until dashboards / auth / datasource are finalized.
+  #
+  # grafana:
+  #   image: grafana/grafana:11.1.0
+  #   container_name: web-platform-grafana
+  #   restart: unless-stopped
+  #   ports:
+  #     - '3000:3000'
+  #   environment:
+  #     GF_SERVER_ROOT_URL: ${GRAFANA_BASE_URL}
+  #     GF_SECURITY_ALLOW_EMBEDDING: 'true'
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #   # Suggested next step when enabling:
+  #   # - put Grafana behind ALB or reverse proxy
+  #   # - connect Prometheus / Loki / other datasources
+  #   # - then enable backend/src/server.js grafana route and frontend API usage
+
+# volumes:
+#   grafana_data:

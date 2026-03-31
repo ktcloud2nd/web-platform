@@ -9,6 +9,8 @@ import {
   getVehicleEmbedUrls,
   validateQuickSightConfig
 } from './quicksight.js';
+// Ready for later enablement when deployment Grafana is finalized.
+// import { getGrafanaEmbedPayload } from './grafana.js';
 
 const app = express();
 const port = Number(process.env.PORT || 4000);
@@ -166,6 +168,13 @@ if (isEnabledForTarget('login')) {
 }
 
 if (isEnabledForTarget('operator')) {
+  // Uncomment when operator Grafana embed should come from backend-managed env config
+  // instead of the current local direct iframe URL in OperatorInfraServicePage.
+  //
+  // app.get('/api/grafana/embed', (_request, response) => {
+  //   response.json(getGrafanaEmbedPayload());
+  // });
+
   app.get('/api/anomalies/latest-alert', async (_request, response) => {
     try {
       const result = await query(

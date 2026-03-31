@@ -12,6 +12,14 @@ const operatorTabs = [
 // Deployment examples:
 // https://your-domain.example/grafana/d-solo/...
 // http://your-server-ip:3000/grafana/d-solo/...
+//
+// Future production handoff already prepared but intentionally left disconnected:
+// - frontend/src/api/grafana.js
+// - frontend/src/components/GrafanaEmbedFrame.jsx
+// - backend/src/grafana.js
+// - backend/src/server.js commented /api/grafana/embed route
+//
+// Keep the local direct iframe URLs below until deployment Grafana/auth settings are finalized.
 const createGrafanaPanelUrl = (panelId) =>
   `http://localhost:3000/grafana/d-solo/k3s-infra-draft/k3s-infra-overview-draft?orgId=1&from=now-1h&to=now&timezone=browser&var-datasource=prometheus&var-namespace=$__all&refresh=30s&panelId=${panelId}&__feature.dashboardScene=true`;
 
