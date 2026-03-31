@@ -13,12 +13,14 @@ const quicksightClient = region
 
 const EMBED_TARGETS = {
   anomaly: {
-    title: '이상 탐지 대시보드',
-    dashboardIdEnvKey: 'QUICKSIGHT_ANOMALY_DASHBOARD_ID'
+    title: 'Operator Anomaly Dashboard',
+    dashboardIdEnvKey: 'QUICKSIGHT_ANOMALY_DASHBOARD_ID',
+    registeredUserArnEnvKey: 'QUICKSIGHT_ANOMALY_REGISTERED_USER_ARN'
   },
   vehicle: {
-    title: '운영자 차량 대시보드',
-    dashboardIdEnvKey: 'QUICKSIGHT_VEHICLE_DASHBOARD_ID'
+    title: 'Operator Vehicle Dashboard',
+    dashboardIdEnvKey: 'QUICKSIGHT_VEHICLE_DASHBOARD_ID',
+    registeredUserArnEnvKey: 'QUICKSIGHT_VEHICLE_REGISTERED_USER_ARN'
   }
 };
 
@@ -50,7 +52,11 @@ function getDashboardConfig(target) {
     target,
     title: targetConfig.title,
     dashboardId: process.env[targetConfig.dashboardIdEnvKey],
-    dashboardIdEnvKey: targetConfig.dashboardIdEnvKey
+    dashboardIdEnvKey: targetConfig.dashboardIdEnvKey,
+    registeredUserArn:
+      process.env[targetConfig.registeredUserArnEnvKey] ||
+      process.env.QUICKSIGHT_REGISTERED_USER_ARN,
+    registeredUserArnEnvKey: targetConfig.registeredUserArnEnvKey
   };
 }
 
@@ -61,7 +67,9 @@ function validateTargetConfig(target) {
   if (!region) missingFields.push('AWS_REGION');
   if (!config.awsAccountId) missingFields.push('QUICKSIGHT_AWS_ACCOUNT_ID');
   if (!config.registeredUserArn) {
-    missingFields.push('QUICKSIGHT_REGISTERED_USER_ARN');
+    missingFields.push(
+      `${config.registeredUserArnEnvKey} or QUICKSIGHT_REGISTERED_USER_ARN`
+    );
   }
   if (!config.dashboardId) {
     missingFields.push(config.dashboardIdEnvKey);
