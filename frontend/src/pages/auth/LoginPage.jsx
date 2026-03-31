@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchModelCodes, login, signup } from '../../api/auth';
-import { setStoredSession } from '../../utils/authStorage';
+import { getDefaultPathForRole, isExternalUrl } from '../../config/appTarget';
+import { encodeSession, setStoredSession } from '../../utils/authStorage';
 
 const initialLoginForm = {
   userId: '',
@@ -65,12 +66,20 @@ function LoginPage() {
       const result = await login(loginForm);
       setStoredSession(result);
 
-      if (result.role === 'operator') {
-        navigate('/operator/infra-service');
+      const destinationUrl = new URL(
+        getDefaultPathForRole(result.role),
+        window.location.origin
+      );
+      destinationUrl.searchParams.set('session', encodeSession(result));
+
+      if (isExternalUrl(destinationUrl.toString())) {
+        window.location.assign(destinationUrl.toString());
         return;
       }
 
-      navigate('/user/dashboard');
+      navigate(
+        `${destinationUrl.pathname}${destinationUrl.search}${destinationUrl.hash}`
+      );
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
@@ -86,7 +95,7 @@ function LoginPage() {
     try {
       const result = await signup(signupForm);
       setSuccessMessage(
-        `${result.message} 발급된 회원 번호는 ${result.user.id}번입니다. 이제 로그인해 주세요.`
+        `${result.message} Your member number is ${result.user.id}. Please sign in.`
       );
       setSignupForm(initialSignupForm);
       setMode('login');
@@ -110,7 +119,7 @@ function LoginPage() {
               setMode('login');
             }}
           >
-            로그인
+            Login
           </button>
           <button
             type="button"
@@ -120,15 +129,15 @@ function LoginPage() {
               setMode('signup');
             }}
           >
-            회원가입
+            Sign Up
           </button>
         </div>
 
         <h1>{mode === 'login' ? 'Web Platform Login' : 'Web Platform Sign Up'}</h1>
         <p>
           {mode === 'login'
-            ? '일반 사용자 계정을 회원가입 후 로그인할 수 있습니다.'
-            : '회원가입은 사용자 계정만 가능합니다.'}
+            ? 'Sign in from the dedicated login frontend and move to the role-specific app.'
+            : 'Create a new account to access the separated user application.'}
         </p>
 
         {errorMessage ? <div className="auth-message error">{errorMessage}</div> : null}
@@ -139,79 +148,79 @@ function LoginPage() {
         {mode === 'login' ? (
           <form onSubmit={handleLoginSubmit} className="login-form">
             <label>
-              아이디
+              User ID
               <input
                 type="text"
                 name="userId"
                 value={loginForm.userId}
                 onChange={handleLoginChange}
-                placeholder="아이디를 입력하세요"
+                placeholder="Enter your user ID"
               />
             </label>
 
             <label>
-              비밀번호
+              Password
               <input
                 type="password"
                 name="password"
                 value={loginForm.password}
                 onChange={handleLoginChange}
-                placeholder="비밀번호를 입력하세요"
+                placeholder="Enter your password"
               />
             </label>
 
             <button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? '처리 중...' : '로그인'}
+              {isSubmitting ? 'Signing in...' : 'Login'}
             </button>
           </form>
         ) : (
           <form onSubmit={handleSignupSubmit} className="login-form">
             <label>
-              아이디
+              User ID
               <input
                 type="text"
                 name="userId"
                 value={signupForm.userId}
                 onChange={handleSignupChange}
-                placeholder="중복되지 않는 아이디를 입력하세요"
+                placeholder="Choose a user ID"
               />
             </label>
 
             <label>
-              비밀번호
+              Password
               <input
                 type="password"
                 name="password"
                 value={signupForm.password}
                 onChange={handleSignupChange}
-                placeholder="비밀번호를 입력하세요"
+                placeholder="Choose a password"
               />
             </label>
 
             <label>
-              이름
+              User Name
               <input
                 type="text"
                 name="userName"
                 value={signupForm.userName}
                 onChange={handleSignupChange}
-                placeholder="이름을 입력하세요"
+                placeholder="Enter your display name"
               />
             </label>
 
             <label>
-              차량 ID
+              Vehicle ID
               <input
                 type="text"
                 name="vehicleId"
                 value={signupForm.vehicleId}
                 onChange={handleSignupChange}
-                placeholder="vehicle_id를 입력하세요"
+                placeholder="Optional vehicle_id value"
               />
             </label>
 
             <label>
-              모델 코드
+              Model Code
               <select
                 name="modelCode"
                 value={signupForm.modelCode}
@@ -226,7 +235,7 @@ function LoginPage() {
             </label>
 
             <button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? '처리 중...' : '회원가입'}
+              {isSubmitting ? 'Creating account...' : 'Sign Up'}
             </button>
           </form>
         )}

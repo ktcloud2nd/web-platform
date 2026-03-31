@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
+import { getLoginUrl, isExternalUrl } from '../config/appTarget';
 import { clearStoredSession, getStoredSession } from '../utils/authStorage';
 
 function DashboardLayout({ role, userId, title, description, tabs = [], children }) {
@@ -20,7 +21,14 @@ function DashboardLayout({ role, userId, title, description, tabs = [], children
 
   const handleLogout = () => {
     clearStoredSession();
-    navigate('/login');
+    const loginUrl = getLoginUrl();
+
+    if (isExternalUrl(loginUrl)) {
+      window.location.assign(loginUrl);
+      return;
+    }
+
+    navigate(loginUrl);
   };
 
   return (
@@ -55,7 +63,7 @@ function DashboardLayout({ role, userId, title, description, tabs = [], children
         <div className="topbar-right">
           <span className="user-chip">{resolvedUserId}</span>
           <button type="button" className="logout-button" onClick={handleLogout}>
-            로그아웃
+            Logout
           </button>
         </div>
       </header>

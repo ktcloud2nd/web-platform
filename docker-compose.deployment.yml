@@ -1,12 +1,13 @@
 services:
-  backend:
-    image: your-registry/web-platform-backend:latest
-    container_name: web-platform-backend
+  login-backend:
+    image: ${LOGIN_BACKEND_IMAGE:-your-registry/web-platform-login-backend:latest}
+    container_name: web-platform-login-backend
     restart: unless-stopped
     env_file:
       - ./deploy.env
     environment:
       PORT: 4000
+      APP_TARGET: login
     healthcheck:
       test:
         [
@@ -20,15 +21,91 @@ services:
       retries: 5
       start_period: 20s
 
-  frontend:
-    image: your-registry/web-platform-frontend:latest
-    container_name: web-platform-frontend
+  user-backend:
+    image: ${USER_BACKEND_IMAGE:-your-registry/web-platform-user-backend:latest}
+    container_name: web-platform-user-backend
+    restart: unless-stopped
+    env_file:
+      - ./deploy.env
+    environment:
+      PORT: 4000
+      APP_TARGET: user
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/api/health').then((res) => { if (!res.ok) process.exit(1); }).catch(() => process.exit(1));"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  operator-backend:
+    image: ${OPERATOR_BACKEND_IMAGE:-your-registry/web-platform-operator-backend:latest}
+    container_name: web-platform-operator-backend
+    restart: unless-stopped
+    env_file:
+      - ./deploy.env
+    environment:
+      PORT: 4000
+      APP_TARGET: operator
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/api/health').then((res) => { if (!res.ok) process.exit(1); }).catch(() => process.exit(1));"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  login-frontend:
+    image: ${LOGIN_FRONTEND_IMAGE:-your-registry/web-platform-login-frontend:latest}
+    container_name: web-platform-login-frontend
     restart: unless-stopped
     depends_on:
-      backend:
+      login-backend:
         condition: service_healthy
     ports:
-      - '80:80'
+      - '${LOGIN_FRONTEND_PORT:-8080}:80'
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/healthz']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  user-frontend:
+    image: ${USER_FRONTEND_IMAGE:-your-registry/web-platform-user-frontend:latest}
+    container_name: web-platform-user-frontend
+    restart: unless-stopped
+    depends_on:
+      user-backend:
+        condition: service_healthy
+    ports:
+      - '${USER_FRONTEND_PORT:-8081}:80'
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/healthz']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  operator-frontend:
+    image: ${OPERATOR_FRONTEND_IMAGE:-your-registry/web-platform-operator-frontend:latest}
+    container_name: web-platform-operator-frontend
+    restart: unless-stopped
+    depends_on:
+      operator-backend:
+        condition: service_healthy
+    ports:
+      - '${OPERATOR_FRONTEND_PORT:-8082}:80'
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1/healthz']
       interval: 30s
